@@ -197,9 +197,7 @@ const updateProfile = async (req, res) => {
       dateOfBirth,
     } = profile;
 
-    console.log(req.body);
-
-    // Filter out null/undefined fields
+    // Filter out null, undefined, and empty string values
     const data = Object.fromEntries(
       Object.entries({
         firstName,
@@ -212,10 +210,10 @@ const updateProfile = async (req, res) => {
         gender,
         postalCode,
         dateOfBirth,
-      }).filter(([_, value]) => value != null) // Exclude null or undefined values
+      }).filter(([_, value]) => value != null && value !== '') // Exclude null and empty strings
     );
 
-    console.log("Filtered data provided by the user:", data);
+    console.log("Filtered data for update:", data);
 
     const userProfile = await UserProfile.findOne({ where: { email } });
 
@@ -227,8 +225,8 @@ const updateProfile = async (req, res) => {
 
     res.status(200).json({ message: "User profile updated successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Update failed:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
