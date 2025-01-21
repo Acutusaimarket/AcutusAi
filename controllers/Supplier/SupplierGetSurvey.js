@@ -182,7 +182,7 @@ exports.getLiveSurveys = async (req, res) => {
       });
 
       const processedSurveys = await Promise.all(surveys.map(async (survey) => {
-        const { bid_length_of_interview: LOI, bid_incidence: IR, revenue_per_interview } = survey;
+        const { bid_length_of_interview: LOI, bid_incidence: IR, revenue_per_interview, country_languge } = survey;
         
         // Safely parse revenue_per_interview
         let normalCPI;
@@ -192,6 +192,16 @@ exports.getLiveSurveys = async (req, res) => {
         } catch (error) {
           console.error('Error parsing revenue_per_interview:', error);
           normalCPI = 0;
+        }
+        let countries ;
+        try{
+          if(country_languge === "eng_us"){
+            countries = "US" ;
+          }else if(country_languge === "eng_in"){
+            countries = "IN" ;
+          }
+        }catch(err){
+          console.log("there is a problem with a countries parameter",err)
         }
 
         const percent = Math.round(normalCPI * 0.6 * 10) / 10;
@@ -234,10 +244,10 @@ exports.getLiveSurveys = async (req, res) => {
           })
         );
 
-        // Create a new survey object with processed data
         return {
           ...survey.toJSON(),
           cpi: value,
+          countries,
           revenue_per_interview: null,
           livelink: generateApiUrl(survey.survey_id),
           testlink: generateTestUrl(survey.survey_id),
