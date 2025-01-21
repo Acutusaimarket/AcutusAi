@@ -59,38 +59,6 @@ exports.getAllSurveys = async (req, res) => {
   }
 };
 
-// exports.getAllSurveysDetail = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     console.log("idea", id);
-
-//     const surveys = await Survey.findAll({
-//       where: {
-//         id: id,
-//       },
-//     });
-
-//     if (surveys.length === 0) {
-//       return res.status(404).json({
-//         status: "not found",
-
-//         message: "No survey found with the given ID",
-//       });
-//     }
-
-//     res.status(200).json({
-//       status: "success",
-//       data: surveys[0],
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       status: "error",
-//       message: "An error occurred while fetching the surveys",
-//       error: err.message,
-//     });
-//   }
-// };
 
 // Handle request to get all live surveys
 const RateCard = require("../../models/SupplierRateCard");
