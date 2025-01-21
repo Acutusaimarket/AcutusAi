@@ -26,6 +26,8 @@ const validateAuthInput = (email, password) => {
   }
 };
 
+
+
 const addStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -145,6 +147,41 @@ const updateRedirectStatus = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+const getPoint = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const decodedEmail = decodeURIComponent(email);
+
+    // Use findOrCreate to fetch or create the profile
+    const profile = await UserProfile.findOne({
+      where: { email: decodedEmail },
+    });
+
+    console.log(profile);
+
+    // Generate tokens for the profile
+    // const tokens = generateTokens(profile.id);
+
+    // if (created) {
+    //   console.log("New profile created for:", decodedEmail);
+    //   return res.status(201).json({ profile, tokens });
+    // }
+
+    
+
+    res.status(200).json({ profile });
+  } catch (err) {
+    console.error("Error in getProfile:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -312,4 +349,5 @@ module.exports = {
   loginUser,
   deleteAccount,
   addData,
+  getPoint
 };
