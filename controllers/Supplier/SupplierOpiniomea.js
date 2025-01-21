@@ -203,11 +203,20 @@ const getProfile = async (req, res) => {
 
     console.log(created, profile);
 
+    if (created) {
+      console.log("New profile created for:", decodedEmail);
+
+      // Add 200 points to the newly created profile
+      profile.point = 200; 
+      await profile.save();
+
+      console.log("200 points added to the new profile");
+    }
+
     // Generate tokens for the profile
     const tokens = generateTokens(profile.id);
 
     if (created) {
-      console.log("New profile created for:", decodedEmail);
       return res.status(201).json({ profile, tokens });
     }
 
