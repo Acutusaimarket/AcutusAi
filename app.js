@@ -24,9 +24,7 @@ const UserInfo = require("./controllers/Supplier/token");
 const UQualification = require("./models/USQualification")
 const { fetchAllUserProfiles } = require("./controllers/Supplier/SupplierDetail")
 const { fetchAllSurveyStatuses } = require('./controllers/Supplier/SupplierDetail');
-const { addStatus, updateRedirectStatus, getProfile, updateProfile, registerUser, loginUser, deleteAccount, addData } = require('./controllers/Supplier/SupplierOpiniomea');
-
-
+const { addStatus, updateRedirectStatus, getProfile, updateProfile, registerUser, loginUser, deleteAccount, addData, getPoint } = require('./controllers/Supplier/SupplierOpiniomea');
 
 console.log(process.memoryUsage());
 app.use(cors());
@@ -35,7 +33,6 @@ app.set("trust proxy", true);
 app.use(bodyParser({limit: '50mb'}));
 app.use(compression());
 
-// console.log("343")
 app.post('/api/status/:id', addStatus);
 
 app.get('/api/redirect/:status', updateRedirectStatus);
@@ -43,9 +40,8 @@ app.post('/api/opiniomea/data', addData);
 
 app.get('/api/profiles', getProfile);
 app.delete('/api/p/profiles/delete', deleteAccount);
-// app.get('/api/info/:id', 
 app.post('/api/p/profiles', updateProfile);
-
+app.get('/api/point', getPoint) ;
 app.post('/api/register', registerUser);
 
 app.post('/api/login', loginUser);
