@@ -59,38 +59,6 @@ exports.getAllSurveys = async (req, res) => {
   }
 };
 
-// exports.getAllSurveysDetail = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     console.log("idea", id);
-
-//     const surveys = await Survey.findAll({
-//       where: {
-//         id: id,
-//       },
-//     });
-
-//     if (surveys.length === 0) {
-//       return res.status(404).json({
-//         status: "not found",
-
-//         message: "No survey found with the given ID",
-//       });
-//     }
-
-//     res.status(200).json({
-//       status: "success",
-//       data: surveys[0],
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       status: "error",
-//       message: "An error occurred while fetching the surveys",
-//       error: err.message,
-//     });
-//   }
-// };
 
 // Handle request to get all live surveys
 const RateCard = require("../../models/SupplierRateCard");
@@ -166,6 +134,7 @@ async function getRate(rateCard, LOI, IR) {
 
 const NodeCache = require("node-cache");
 const surveyCache = new NodeCache({ stdTTL: 100, checkperiod: 600 }); // Cache with TTL of 1 hour
+
 exports.getLiveSurveys = async (req, res) => {
   const apiKey = req.headers.authorization;
 
@@ -209,15 +178,19 @@ exports.getLiveSurveys = async (req, res) => {
             as: "survey_qualifications",
           },
         ],
-        limit : 200,
-        raw: false // Change to raw: false to get model instances
+        limit: 200,
+        raw: false
       });
 
+      // const { ResearchSurvey } = surveys;
+
+      // console.log(Resear
+
       const processedSurveys = await Promise.all(surveys.map(async (survey) => {
-        const { bid_length_of_interview: LOI, bid_incidence: IR, revenue_per_interview } = survey;
-        
-        // Safely parse revenue_per_interview
+        const { bid_length_of_interview: LOI, bid_incidence: IR, revenue_per_interview,  country_language : c } = survey;
+        console.log(c)
         let normalCPI;
+
         try {
           const cut = JSON.parse(revenue_per_interview || '{"value": 0}');
           normalCPI = Number(cut.value);
@@ -229,22 +202,28 @@ exports.getLiveSurveys = async (req, res) => {
         const percent = Math.round(normalCPI * 0.6 * 10) / 10;
         let value = percent;
 
-        // Calculate rate for specific supplier
         if (SupplyId === 2580) {
           try {
             value = await getRate(RateCard, LOI, IR);
           } catch (rateError) {
             console.error('Rate calculation error:', rateError);
-            return null; // Skip this survey if rate calculation fails
+            return null;
           }
         }
 
-        // Skip surveys where the value is not greater than CPI for specific supplier
-        if (value >= normalCPI && SupplyId == 2580) {
+        if (value >= normalCPI && SupplyId === 2580) {
           return null;
         }
 
-        // Process qualifications
+        // Map c to countr
+        let countries = null;
+        if (c === 'eng_us') {
+          countries = 'US';
+        } else if (c === 'eng_in') {
+          countries = 'IN';
+        } else {
+          console.log(`Unrecognized c: ${c}`);
+        }
         const qualifications = await Promise.all(
           (survey.survey_qualifications || []).map(async (qualification) => {
             try {
@@ -266,18 +245,19 @@ exports.getLiveSurveys = async (req, res) => {
           })
         );
 
-        // Create a new survey object with processed data
-        return {
+        const processedSurvey = {
           ...survey.toJSON(),
           cpi: value,
           revenue_per_interview: null,
           livelink: generateApiUrl(survey.survey_id),
           testlink: generateTestUrl(survey.survey_id),
+          countries, // Add countries parameter here
           survey_qualifications: qualifications,
         };
+
+        return processedSurvey;
       }));
 
-      // Filter out null values
       const validSurveys = processedSurveys.filter(survey => survey !== null);
 
       surveyCache.set(cacheKey, validSurveys);
@@ -288,7 +268,7 @@ exports.getLiveSurveys = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      data: surveys,
+      data: surveys
     });
   } catch (err) {
     console.error("Error in getLiveSurveys:", err);
@@ -299,7 +279,6 @@ exports.getLiveSurveys = async (req, res) => {
     });
   }
 };
-
 
 exports.getFinishedSurveys = async (req, res) => {
   try {
