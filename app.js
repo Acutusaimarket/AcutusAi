@@ -24,6 +24,7 @@ const UserInfo = require("./controllers/Supplier/token");
 const UQualification = require("./models/USQualification")
 const { fetchAllUserProfiles } = require("./controllers/Supplier/SupplierDetail")
 const { fetchAllSurveyStatuses } = require('./controllers/Supplier/SupplierDetail');
+const { fetchAllResearchSurveys } = require('./controllers/Supplier/SupplierDetail')
 const { addStatus, updateRedirectStatus, getProfile, updateProfile, registerUser, loginUser, deleteAccount, addData, getPoint } = require('./controllers/Supplier/SupplierOpiniomea');
 
 console.log(process.memoryUsage());
@@ -386,6 +387,7 @@ app.post("/getResearchSurveys", async (req, res) => {
 });
 
 app.get("/opiniomea/entry", surveyDetailController.redirectopiniomea)
+app.get('/research-surveys', fetchAllResearchSurveys);
 app.get('/opiniomea/user', fetchAllSurveyStatuses);
 app.get('/supplies', fetchAllSupplies);
 app.get("/user-profiles",fetchAllUserProfiles);  
@@ -403,6 +405,7 @@ app.post("/devicedata/", deviceDetail.getDeviceData);
 app.get("/compaign/", surveyDetailController.redirectIndividual)
 app.get("/compaign/live", surveyDetailController.redirectIndividualCompaign)
 app.get("/0001012/", surveyDetailController.redirectUser)
+
 
  app.use("/api/v1/survey", surveyRoutes);
  app.use("/api/v2/survey", detailRoutes);

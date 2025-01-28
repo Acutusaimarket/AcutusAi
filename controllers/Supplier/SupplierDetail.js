@@ -36,13 +36,48 @@ exports.fetchAllSurveyStatuses = async (req, res) => {
 
 
 
+
+
+exports.fetchAllResearchSurveys = async (req, res) => {
+  try {
+    const { is_live } = req.query; // Use query params for filtering by is_live status
+    const whereCondition = is_live !== undefined ? { is_live: 1 === 'true' } : {};
+
+    const researchSurveys = await ResearchSurvey.findAll({
+      where: {
+        is_live: 1,
+        message_reason: { [Op.ne]: "deactivated" },
+        livelink: { [Op.ne]: "" },
+      },
+      include: [
+        {
+          model: ResearchSurveyQuota,
+          as: 'survey_quotas',
+        },
+        {
+          model: ResearchSurveyQualification,
+          as: 'survey_qualifications',
+        }
+      ]
+    });
+
+    return res.status(200).json({ data: researchSurveys });
+  } catch (err) {
+    console.error("Error fetching research surveys:", err);
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+
+
 exports.createSupplier = async (req, res) => {
   try {
     const body = req.body;
     const response = await supplier.create({
       ...body
     });
-    
+
     res.status(200).json(response);
   } catch (error) {
     console.error("Error creating supplier:", error);
@@ -162,7 +197,7 @@ exports.fetchAllSupplies = async (req, res) => {
 
 
 
-exports.fetchSupplyInfo = async (req,res) =>  {
+exports.fetchSupplyInfo = async (req, res) => {
   try {
     const { supplierId } = req.query; // Use query params for filtering
     const whereCondition = supplierId ? { SupplierID: supplierId } : {};
@@ -208,7 +243,7 @@ exports.getChanel = async (req, res) => {
     const { PNID } = req.query;
     function generatePanelId(length) {
       return Math.random().toString(36).substring(2, 2 + length);
-  }
+    }
 
     // Validate query parameter
     if (!PNID) {
@@ -246,10 +281,10 @@ exports.getChanel = async (req, res) => {
 };
 exports.getFacebookChanel = async (req, res) => {
   try {
-    
+
     function generatePanelId(length) {
       return Math.random().toString(36).substring(2, 2 + length);
-  }
+    }
 
     const survey = await ResearchSurvey.findOne({
       where: {
@@ -338,11 +373,11 @@ exports.fetchSurvey = async (req, res) => {
     console.log(survey);
 
     if (survey) {
-      res.status(200).json({data : survey});
+      res.status(200).json({ data: survey });
     } else {
       return res.status(404).json({ message: 'Survey not found' });
     }
-    
+
   } catch (err) {
     return res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -379,9 +414,9 @@ exports.getSurveyQualification = async (req, res) => {
     const { id } = req.params;
 
     // Fetch survey with associated qualifications
-    const survey = await ResearchSurvey.findAll( {
-      where :{
-        survey_id : id
+    const survey = await ResearchSurvey.findAll({
+      where: {
+        survey_id: id
 
       },
       attributes: ['survey_id', 'survey_name'],
@@ -391,7 +426,7 @@ exports.getSurveyQualification = async (req, res) => {
           as: "survey_qualifications", // Make sure this alias matches the association
         },
       ],
-      
+
     });
 
     // Check if the survey exists
@@ -440,14 +475,14 @@ exports.redirectIndividualCompaign = async (req, res) => {
     // const { sid } = req.params;
     const { supplyID, PNID } = req.query;
     console.log("ipaddress", req.ip);
-    
+
     const supply = await SupplyPrice.findOne({
-      where: { SupplierID : supplyID  },
+      where: { SupplierID: supplyID },
     });
 
     function generatePanelId(length) {
       return Math.random().toString(36).substring(2, 2 + length);
-  }
+    }
 
     console.log(supply);
 
@@ -459,11 +494,11 @@ exports.redirectIndividualCompaign = async (req, res) => {
     }
 
     const supplyInfo = await SupplyInfo.create({
-      id : uuidv4(),
+      id: uuidv4(),
       UserID: PNID,
       SupplyID: supplyID,
-      SessionID : generatePanelId(length = 8),
-      IPAddress : req.ip
+      SessionID: generatePanelId(length = 8),
+      IPAddress: req.ip
     });
 
     const id = supplyInfo.id;
@@ -538,7 +573,7 @@ exports.redirectIndividual = async (req, res) => {
     // const { sid } = req.params;
     const { station } = req.query;
     console.log("ipaddress", req.ip);
-    const state =  78293
+    const state = 78293
     let value = false
     if (station == "fb") {
       value = true
@@ -550,7 +585,7 @@ exports.redirectIndividual = async (req, res) => {
 
     function generatePanelId(length) {
       return Math.random().toString(36).substring(2, 2 + length);
-  }
+    }
 
     console.log(supply);
 
@@ -562,11 +597,11 @@ exports.redirectIndividual = async (req, res) => {
     }
 
     const supplyInfo = await SupplyInfo.create({
-      id : uuidv4(),
+      id: uuidv4(),
       UserID: generatePanelId(length = 8),
       SupplyID: state,
-      SessionID : generatePanelId(length = 8),
-      IPAddress : req.ip
+      SessionID: generatePanelId(length = 8),
+      IPAddress: req.ip
     });
 
     const id = supplyInfo.id;
@@ -633,7 +668,7 @@ exports.redirectToSurvey = async (req, res) => {
     }
 
     const info = await SupplyInfo.create({
-      id : uuidv4(),
+      id: uuidv4(),
       UserID: PNID,
       TID: TokenID,
       SupplyID,
@@ -664,7 +699,7 @@ exports.redirectUser = async (req, res) => {
 
     console.log("ipaddress", req.ip);
     const TokenId = decodeURIComponent(TID);
-   
+
     const supply = await SupplyPrice.findOne({
       where: { SupplierID: SupplyID },
     });
@@ -692,14 +727,14 @@ exports.redirectUser = async (req, res) => {
       });
     }
     console.log("yes");
-    
+
     const supplyInfo = await SupplyInfo.create({
-      id : uuidv4(),
+      id: uuidv4(),
       UserID: PNID,
-      TID : TID,
+      TID: TID,
       SupplyID: SupplyID,
-      SessionID : SessionID,
-      IPAddress : req.ip
+      SessionID: SessionID,
+      IPAddress: req.ip
     });
 
     const id = supplyInfo.id;
@@ -736,7 +771,7 @@ exports.convertSurvey = async (req, res) => {
     } else {
       return res.status(404).json({ message: "Record not found" });
     }
-    
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "An error occurred", error: err });
@@ -744,13 +779,13 @@ exports.convertSurvey = async (req, res) => {
 };
 
 
-exports.getDetail = async(req,res) => {
-  try{
+exports.getDetail = async (req, res) => {
+  try {
     const { id } = req.params;
 
     const info = await Survey.findOne({
-      where : {
-        id : id
+      where: {
+        id: id
       }
     })
     res.status(200).json({
@@ -758,7 +793,7 @@ exports.getDetail = async(req,res) => {
       info
     });
 
-  }catch(err){
+  } catch (err) {
     console.error(err)
   }
 }
@@ -766,8 +801,8 @@ exports.getSurveyQuota = async (req, res) => {
   try {
     const { id } = req.params;
     const survey = await ResearchSurvey.findOne({
-      where : {
-        survey_id : id
+      where: {
+        survey_id: id
       },
       attributes: ['survey_id', 'survey_name'],
       include: [{ model: ResearchSurveyQuota, as: "survey_quotas" }], // Capitalized 'Quotas'
@@ -782,7 +817,7 @@ exports.getSurveyQuota = async (req, res) => {
 
     res.status(200).json({
       status: "success",
-      data : survey
+      data: survey
     });
   } catch (err) {
     console.error("Error fetching survey quota:", err);
@@ -814,7 +849,7 @@ exports.buyerData = async (req, res) => {
     // if()
 
     // Fetch supply information
-    const supply = await SupplyInfo.findOne({ 
+    const supply = await SupplyInfo.findOne({
       where: { id: PID },
       attributes: ['SupplyID', 'UserID']
     });
@@ -825,7 +860,7 @@ exports.buyerData = async (req, res) => {
         message: "Supply not found",
       });
     }
-    
+
 
     const supplier = await Supply.findOne({
       where: { SupplierID: supply.SupplyID },
@@ -841,25 +876,25 @@ exports.buyerData = async (req, res) => {
     }
 
     // Update supply info
-    const updateData = { 
-      status, 
-      task: JSON.stringify(req.body), 
+    const updateData = {
+      status,
+      task: JSON.stringify(req.body),
       InitialStatus,
       ClientStatus
     };
     try {
-        if (supply.SupplyID === 6000) {
-            await SurveyStatus.update(updateData, { where: { id: PID } });
+      if (supply.SupplyID === 6000) {
+        await SurveyStatus.update(updateData, { where: { id: PID } });
       } else {
-          await SupplyInfo.update(updateData, { where: { id: PID } });
-  }
-} catch (err) {
-  console.error("Error updating supply info:", err);
-  return res.status(500).json({
-    status: "error",
-    message: "Error updating supply info",
-  });
-}
+        await SupplyInfo.update(updateData, { where: { id: PID } });
+      }
+    } catch (err) {
+      console.error("Error updating supply info:", err);
+      return res.status(500).json({
+        status: "error",
+        message: "Error updating supply info",
+      });
+    }
 
 
     const statusRedirectMap = {
@@ -870,21 +905,21 @@ exports.buyerData = async (req, res) => {
     };
 
     let redirectUrl = statusRedirectMap[status];
-    console.log(redirectUrl,statusRedirectMap[status],statusRedirectMap.status, statusRedirectMap);
+    console.log(redirectUrl, statusRedirectMap[status], statusRedirectMap.status, statusRedirectMap);
 
-if (!redirectUrl) {
-  console.error(`No redirect URL found for status: ${status}`);
-  return res.status(400).json({
-    status: "error",
-    message: `No redirect URL defined for status: ${status}`,
-  });
-}
-const userid = supply.UserID ;
-// Replace [%AID%] in the redirect URL with the UserID from supply
-redirectUrl = redirectUrl.replace("[%AID%]", userid);
-console.log("Final Redirect URL:", redirectUrl);
+    if (!redirectUrl) {
+      console.error(`No redirect URL found for status: ${status}`);
+      return res.status(400).json({
+        status: "error",
+        message: `No redirect URL defined for status: ${status}`,
+      });
+    }
+    const userid = supply.UserID;
+    // Replace [%AID%] in the redirect URL with the UserID from supply
+    redirectUrl = redirectUrl.replace("[%AID%]", userid);
+    console.log("Final Redirect URL:", redirectUrl);
 
-    
+
     return res.redirect(redirectUrl);
 
   } catch (err) {
@@ -918,7 +953,7 @@ exports.detail = async (req, res) => {
     const { id } = req.params;
     // Fetch ReportInfo using the SurveyID
     const ReportInfo = await SupplyInfo.findAll({
-      attributes : ["createdAt", "updatedAt", "status", "id", "UserID","SupplyID","SurveyID"],
+      attributes: ["createdAt", "updatedAt", "status", "id", "UserID", "SupplyID", "SurveyID"],
       where: {
         SupplyID: id,
       },
@@ -927,8 +962,8 @@ exports.detail = async (req, res) => {
     console.log(surveyIDs)
 
     const SurveyInfo = await ResearchSurvey.findOne({
-      where :{
-        survey_id : surveyIDs
+      where: {
+        survey_id: surveyIDs
       }
     });
 
@@ -941,18 +976,18 @@ exports.detail = async (req, res) => {
 
     // Add SurveyInfo details to each ReportInfo item
     const mergedInfo = ReportInfo.map((report) => ({
-      panelistId : report.UserID,
-      AID : report.id,
+      panelistId: report.UserID,
+      AID: report.id,
       createdAt: report.createdAt,
       updatedAt: report.updatedAt,
       status: report.status,
-      SurveyID: SurveyInfo.survey_id, 
-      SurveyName: SurveyInfo.survey_name, 
+      SurveyID: SurveyInfo.survey_id,
+      SurveyName: SurveyInfo.survey_name,
       status: SurveyInfo.islive,
       cpi: SurveyInfo.cpi,
-      country_language : SurveyInfo.country_language,
-      IR : SurveyInfo.bid_incidence,
-      LOI : SurveyInfo.bid_length_of_interview
+      country_language: SurveyInfo.country_language,
+      IR: SurveyInfo.bid_incidence,
+      LOI: SurveyInfo.bid_length_of_interview
     }));
 
     // Return merged information
@@ -966,7 +1001,7 @@ exports.detail = async (req, res) => {
 exports.Complete = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const CompInfo = await SupplyInfo.findAll({
       where: {
         status: "Complete"
@@ -979,16 +1014,16 @@ exports.Complete = async (req, res) => {
     });
 
     const EntrantInfo = await SupplyInfo.findAll({
-      where : {
-        SurveyID : id
+      where: {
+        SurveyID: id
       }
     })
 
     const conversionRate = CompInfo.length / (CompInfo.length + TermInfo.length)
-    const DropOffRate  = (EntrantInfo.length - CompInfo.length ) / EntrantInfo.length
+    const DropOffRate = (EntrantInfo.length - CompInfo.length) / EntrantInfo.length
     const incidenceRate = CompInfo.length / (CompInfo.length + TermInfo.length)
 
-    res.status(200).json({ Compcount: CompInfo.length, Termcount : TermInfo.length, conversionRate : conversionRate, EntrantInfo : EntrantInfo.length, DropOffRate : DropOffRate, incidenceRate : incidenceRate });
+    res.status(200).json({ Compcount: CompInfo.length, Termcount: TermInfo.length, conversionRate: conversionRate, EntrantInfo: EntrantInfo.length, DropOffRate: DropOffRate, incidenceRate: incidenceRate });
 
   } catch (err) {
     console.error(err);
@@ -1004,7 +1039,7 @@ exports.CookiesDetail = async (req, res) => {
   try {
     // var ipInfo = getIP(req);
     // console.log(ipInfo);
-    const { id } = req.params; 
+    const { id } = req.params;
     // console.log("idea",req.connection.remoteAddress);
     // console.log(req.headers)
     const ip = requestIp.getClientIp(req)
@@ -1013,9 +1048,9 @@ exports.CookiesDetail = async (req, res) => {
 
     // Create new cookie details in the database
     const newCookie = await Cookies.create({
-      AID : panelistId,
-      CookiesData : "data",
-      IpAddress : ipAddress,
+      AID: panelistId,
+      CookiesData: "data",
+      IpAddress: ipAddress,
       sessionID,
     });
 
