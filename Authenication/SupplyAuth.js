@@ -12,6 +12,7 @@ const SupplyAuthChecker = async (req, res, next) => {
     console.log(req.headers);
     const ApiKey = req.headers["authorization"];
     console.log(Supply);
+    console.log("detail") ;
     try {
         const SupplyData = await Supply.findOne({ where: { ApiKey } }); // Fixed variable name
         if (SupplyData) {
